@@ -8,16 +8,13 @@ class PrinterManager:
         printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)
         printer_info = []
         for printer in printers:
-            printer_name = printer[2]  # Nome da impressora
-            # Obtém o monitor associado à impressora
+            printer_name = printer[2]
             handle = win32print.OpenPrinter(printer_name)
-            printer_details = win32print.GetPrinter(handle, 2)  # Obtém informações detalhadas
+            printer_details = win32print.GetPrinter(handle, 2)
 
-            # Removendo os campos 'pDevMode' (PyDEVMODEW) e 'pSecurityDescriptor' (PySECURITY_DESCRIPTOR)
             printer_details.pop('pDevMode', None)
             printer_details.pop('pSecurityDescriptor', None)
 
-            # Adiciona um dicionário simplificado com dados serializáveis
             printer_info.append(printer_details)
 
         return printer_info
