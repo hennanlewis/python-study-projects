@@ -4,9 +4,16 @@ Este projeto implementa a criptografia e decriptação de dados utilizando o alg
 
 ## Funcionalidades
 
-- Criptografia AES (CBC): Encripta dados usando a chave AES no modo CBC.
-- Decriptação AES (CBC): Desencripta dados encriptados com AES no modo CBC.
-- Padding (PKCS7): Adiciona e remove o padding de dados para garantir que o texto tenha o tamanho correto (múltiplo de 16 bytes) antes da encriptação e após a decriptação.
+- **Criptografia AES** (CBC): Encripta dados usando a chave AES no modo CBC.
+- **Decriptação AES** (CBC): Desencripta dados encriptados com AES no modo CBC.
+- **Padding** (PKCS7): Adiciona e remove o padding de dados para garantir que o texto tenha o tamanho correto (múltiplo de 16 bytes) antes da encriptação e após a decriptação.
+- **Validações Robustas**: Verificações para garantir a integridade de entradas e evitar erros comuns (como tamanhos incorretos de IV ou chaves).
+- **Separação de Lógica**: Métodos dedicados para geração de chaves e vetores de inicialização (IVs), facilitando testes e reutilização.
+
+## Constantes
+
+- `DEFAULT_KEY_SIZE` (int): Tamanho padrão da chave AES em bytes (32 bytes).
+- `AES_BLOCK_SIZE` (int): Tamanho do bloco AES em bytes (16 bytes).
 
 ## Instalação
 
@@ -38,22 +45,36 @@ print(f"Texto decriptado: {decrypted_text}")
 
 ### Métodos disponíveis:
 
-`encrypt(plaintext: str) -> Tuple[bytes, bytes]`
-- Descrição: Criptografa o texto fornecido usando AES em modo CBC, com padding PKCS7.
-- Parâmetros:
+#### `encrypt(plaintext: str) -> Tuple[bytes, bytes]`
+- **Descrição**: Criptografa o texto fornecido usando AES em modo CBC, com padding PKCS7.
+- **Parâmetros**:
     - `plaintext` (str): O texto que você deseja encriptar.
-- Retorno: Retorna o texto encriptado (`ciphertext`) e o vetor de inicialização (`iv`) usados.
+- **Retorno**: Retorna o texto encriptado (`ciphertext`) e o vetor de inicialização (`iv`) usados.
+- **Validação**: Garante que o `plaintext` seja do tipo `str`.
 
-`decrypt(ciphertext: bytes, iv: bytes) -> str`
-- Descrição: Desencripta o texto fornecido usando AES em modo CBC, removendo o padding PKCS7.
-- Parâmetros:
+#### `decrypt(ciphertext: bytes, iv: bytes) -> str`
+- **Descrição**: Desencripta o texto fornecido usando AES em modo CBC, removendo o padding PKCS7.
+- **Parâmetros**:
     - `ciphertext` (bytes): O texto encriptado que você deseja decriptar.
     - `iv` (bytes): O vetor de inicialização usado na encriptação.
-- Retorno: Retorna o texto decriptado como uma string (`str`).
+- **Retorno**: Retorna o texto decriptado como uma string (`str`).
+- **Validações**:
+    - Garante que `ciphertext` e `iv` sejam do tipo `bytes`.
+    - Verifica se o `iv` tem o tamanho correto (`AES_BLOCK_SIZE`).
 
-`get_key() -> bytes`
-- Descrição: Retorna a chave de encriptação usada pelo objeto.
-- Retorno: A chave de encriptação usada.
+#### `get_key() -> bytes`
+- **Descrição**: Retorna a chave de encriptação usada pelo objeto.
+- **Retorno**: A chave AES.
+
+#### `_generate_key(key_size: int) -> bytes`
+- **Descrição**: Gera uma chave AES aleatória do tamanho especificado.
+- **Parâmetros**:
+    - `key_size` (int): Tamanho da chave em bytes.
+- **Retorno**: Chave AES gerada.
+
+#### `_generate_iv() -> bytes`
+- **Descrição**: Gera um vetor de inicialização (IV) aleatório.
+- **Retorno**: Vetor de inicialização (`IV`).
 
 ### Métodos internos:
 
@@ -77,4 +98,4 @@ Após a decriptação, o padding é removido para que o texto original seja rest
 
 ## Contribuição
 
-Se você quiser contribuir com melhorias ou correções, fique à vontade para fazer um fork deste repositório e enviar um pull request.
+Contribuições são bem-vindas! Sinta-se à vontade para fazer um fork deste repositório e enviar um pull request com suas melhorias ou correções.
