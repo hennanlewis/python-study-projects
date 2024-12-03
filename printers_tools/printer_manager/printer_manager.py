@@ -3,7 +3,7 @@ import win32print
 class PrinterManager:
 
     @staticmethod
-    def get_printer_list():
+    def get_printers_list():
         """Retorna a lista de impressoras atuais do computador com seus respectivos detalhes."""
 
         printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)
@@ -13,13 +13,10 @@ class PrinterManager:
             printer_name = printer[2]
             try:
                 with win32print.OpenPrinter(printer_name) as handle:
-                    printer_details = win32print.GetPrinter(handle, 2)
-                    # Remover dados desnecessários
-                    printer_details.pop('pDevMode', None)
-                    printer_details.pop('pSecurityDescriptor', None)
+                    printer_details = win32print.GetPrinter(handle, 1)
                     printer_info.append(printer_details)
             except Exception as e:
-                printer_info.append({'error': f"Erro ao obter detalhes da impressora {printer_name}: {e}"})
+                raise RuntimeError({'error': f"Erro ao obter detalhes da impressora {printer_name}: {e}"})
 
         return printer_info
 
@@ -40,15 +37,14 @@ class PrinterManager:
         try:
             ports = PrinterManager.get_ports(printer_name)
             return port_name in ports
-        except Exception:
-            return False
+        except Exception as e:
+            raise RuntimeError(f"Erro ao consultar portas da impressora {printer_name}: {e}")
 
     @staticmethod
     def set_port_value(printer_name, port_name, value, monitor=None):
         """Altera o valor de uma porta da impressora."""
 
         try:
-            # Implemente a lógica para alterar a porta aqui
             return f"Alterando porta: Impressora: {printer_name}, Porta: {port_name}, Valor: {value}, Monitor: {monitor}"
         except Exception as e:
             raise RuntimeError(f"Erro ao alterar porta da impressora {printer_name}: {e}")
@@ -58,7 +54,6 @@ class PrinterManager:
         """Cria uma nova porta para a impressora."""
 
         try:
-            # Implemente a lógica para criar uma nova porta aqui
             return f"Criando porta: Impressora: {printer_name}, Porta: {port_name}, Valor: {value}, Monitor: {monitor}"
         except Exception as e:
             raise RuntimeError(f"Erro ao criar porta para a impressora {printer_name}: {e}")
@@ -68,7 +63,6 @@ class PrinterManager:
         """Exclui uma porta de uma impressora se ela existir."""
 
         try:
-            # Implemente a lógica para excluir a porta aqui
             return f"Excluindo porta: Impressora: {printer_name}, Porta: {port_name}"
         except Exception as e:
             raise RuntimeError(f"Erro ao excluir porta da impressora {printer_name}: {e}")
