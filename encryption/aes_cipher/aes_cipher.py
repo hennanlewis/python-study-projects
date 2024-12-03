@@ -1,9 +1,8 @@
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
-import os
 from typing import Tuple
+import os
 
-# Definição de constantes para melhorar legibilidade e manutenção
 DEFAULT_KEY_SIZE = 32
 AES_BLOCK_SIZE = 16
 

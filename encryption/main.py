@@ -1,16 +1,15 @@
+from icecream import ic
 from aes_cipher import AESCipher
+
+ic.configureOutput(prefix='DEBUG | ')
 
 def main():
     cipher = AESCipher(key_size=32)
-    text = "Texto confidencial aqui!"
-
-    print("Texto original:", text)
-
-    ciphertext, iv = cipher.encrypt(text)
-    print(f"Texto encriptado (em bytes): {ciphertext}")
-
+    plain_text = "Texto confidencial aqui!"
+    ciphertext, iv = cipher.encrypt(plain_text)
     decrypted_text = cipher.decrypt(ciphertext, iv)
-    print(f"Texto decriptado: {decrypted_text}")
+
+    ic(plain_text, ciphertext, decrypted_text)
 
 if __name__ == "__main__":
     main()

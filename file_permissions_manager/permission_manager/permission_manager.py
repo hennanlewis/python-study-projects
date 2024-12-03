@@ -1,6 +1,6 @@
-import os
-import subprocess
 from typing import Optional, Callable
+import subprocess
+import os
 
 class PermissionManager:
     SUCCESS_LOG = "success_files.txt"
@@ -63,4 +63,3 @@ class PermissionManager:
 
         self.logger(f"\n{self.success_count} itens processados com sucesso.")
         self.logger(f"{self.failure_count} falhas no processamento.")
-
