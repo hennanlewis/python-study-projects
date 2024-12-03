@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "file-permissions"
+name = "file_permissions_manager"
 version = "0.1.0"
 description = ""
 authors = ["Hennan Lewis <39320310+hennanlewis@users.noreply.github.com>"]
