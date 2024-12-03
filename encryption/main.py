@@ -1,7 +1,6 @@
 from aes_cipher import AESCipher
 
 def main():
-    """Executa a demonstração de criptografia e descriptografia."""
     cipher = AESCipher(key_size=32)
     text = "Texto confidencial aqui!"
 
