@@ -1,56 +1,66 @@
-import subprocess
 import os
+import subprocess
+from typing import Optional, Callable
 
 class PermissionManager:
-    def __init__(self, directory):
+    SUCCESS_LOG = "success_files.txt"
+    FAILURE_LOG = "failure_files.txt"
+    PERMISSIONS = "Todos:F"
+
+    def __init__(self, directory: str, logger: Optional[Callable[[str], None]] = print):
+        """Gerencia permissões de arquivos e diretórios."""
+
         self.directory = directory
         self.success_count = 0
         self.failure_count = 0
-        self.success_log = "success_files.txt"
-        self.failure_log = "failure_files.txt"
+        self.logger = logger
 
-    def _log_result(self, file_path, is_success):
-        """Salva o caminho do arquivo no log correspondente (sucesso ou falha)."""
-        log_file = self.success_log if is_success else self.failure_log
-        with open(log_file, "a", encoding="utf-8") as log:  # Adicionando a codificação UTF-8
+    def _log_result(self, file_path: str, is_success: bool) -> None:
+        """Registra o resultado (sucesso ou falha) no log correspondente."""
+
+        log_file = self.SUCCESS_LOG if is_success else self.FAILURE_LOG
+        with open(log_file, "a", encoding="utf-8") as log:
             log.write(file_path + "\n")
 
-    def _change_permissions(self, file_path):
-        """Muda as permissões de um arquivo ou diretório individualmente."""
-        try:
-            subprocess.run(["takeown", "/F", file_path, "/A"], check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            subprocess.run(["icacls", file_path, "/grant", "Todos:F"], check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            print(f"Sucesso: {file_path}")
-            self._log_result(file_path, True)
-            self.success_count += 1
-        except subprocess.CalledProcessError:
-            print(f"Falha: {file_path}")
-            self._log_result(file_path, False)
-            self.failure_count += 1
+    def _run_command(self, command: list[str], description: str) -> bool:
+        """Executa um comando no sistema e captura o resultado."""
 
-    def _change_permissions_bulk(self, directory):
-        """Altera as permissões para todos os arquivos e diretórios em lote."""
         try:
-            subprocess.run(["takeown", "/F", directory, "/R", "/A"], check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            subprocess.run(["icacls", directory, "/grant", "Todos:F", "/T"], check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            print(f"Sucesso: Permissões alteradas para todos os arquivos em {directory}")
-            self._log_result(directory, True)
-            self.success_count += 1
+            subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.logger(f"Sucesso: {description}")
+            return True
         except subprocess.CalledProcessError:
-            print(f"Falha: Não foi possível alterar as permissões para {directory}")
-            self._log_result(directory, False)
-            self.failure_count += 1
+            self.logger(f"Falha: {description}")
+            return False
 
-    def process_directory(self, use_bulk=False):
-        """Percorre o diretório e altera as permissões de todos os arquivos e pastas."""
-        if use_bulk:
-            self._change_permissions_bulk(self.directory)
+    def _change_permissions(self, file_path: str, recursive: bool = False) -> None:
+        """Altera permissões de um arquivo ou diretório."""
+
+        takeown_cmd = ["takeown", "/F", file_path, "/A"] + (["/R"] if recursive else [])
+        icacls_cmd = ["icacls", file_path, "/grant", self.PERMISSIONS] + (["/T"] if recursive else [])
+
+        success = (
+            self._run_command(takeown_cmd, f"Take Ownership - {file_path}") and
+            self._run_command(icacls_cmd, f"Set Permissions - {file_path}")
+        )
+
+        self._log_result(file_path, success)
+        if success:
+            self.success_count += 1
         else:
-            for root, dirs, files in os.walk(self.directory):
+            self.failure_count += 1
+
+    def process_directory(self, use_bulk: bool = False) -> None:
+        """Processa um diretório para alterar permissões de arquivos e subdiretórios."""
+
+        if use_bulk:
+            self._change_permissions(self.directory, recursive=True)
+        else:
+            for root, _, files in os.walk(self.directory):
                 self._change_permissions(root)
                 for file in files:
-                    file_path = os.path.join(root, file)
-                    self._change_permissions(file_path)
+                    self._change_permissions(os.path.join(root, file))
 
-        print(f"\n{self.success_count} arquivos ou pastas processados com sucesso.")
-        print(f"{self.failure_count} falhas no processamento de arquivos ou pastas.")
+        self.logger(f"\n{self.success_count} itens processados com sucesso.")
+        self.logger(f"{self.failure_count} falhas no processamento.")
+

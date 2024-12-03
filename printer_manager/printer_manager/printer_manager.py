@@ -4,57 +4,71 @@ class PrinterManager:
 
     @staticmethod
     def get_printer_list():
-        """Retorna a lista de impressoras atuais do computador com seus respectivos monitores."""
+        """Retorna a lista de impressoras atuais do computador com seus respectivos detalhes."""
+
         printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)
         printer_info = []
+
         for printer in printers:
             printer_name = printer[2]
-            handle = win32print.OpenPrinter(printer_name)
-            printer_details = win32print.GetPrinter(handle, 2)
-
-            printer_details.pop('pDevMode', None)
-            printer_details.pop('pSecurityDescriptor', None)
-
-            printer_info.append(printer_details)
+            try:
+                with win32print.OpenPrinter(printer_name) as handle:
+                    printer_details = win32print.GetPrinter(handle, 2)
+                    # Remover dados desnecessários
+                    printer_details.pop('pDevMode', None)
+                    printer_details.pop('pSecurityDescriptor', None)
+                    printer_info.append(printer_details)
+            except Exception as e:
+                printer_info.append({'error': f"Erro ao obter detalhes da impressora {printer_name}: {e}"})
 
         return printer_info
 
     @staticmethod
     def get_ports(printer_name):
-        """Recebe o nome da impressora e retorna o nome das portas da impressora recebida."""
+        """Recebe o nome da impressora e retorna o nome das portas associadas a ela."""
+
         try:
             printer_info = win32print.GetPrinter(printer_name, 2)
-            ports = printer_info['pPort']
-            return ports
+            return printer_info.get('pPort', [])
         except Exception as e:
-            return f"Erro ao obter portas: {e}"
+            raise RuntimeError(f"Erro ao obter portas da impressora {printer_name}: {e}")
 
     @staticmethod
     def check_port_exists(printer_name, port_name):
-        """Confere se uma porta de uma impressora X existe."""
-        ports = PrinterManager.get_ports(printer_name)
-        return port_name in ports if isinstance(ports, list) else False
+        """Verifica se uma porta específica existe para a impressora fornecida."""
+
+        try:
+            ports = PrinterManager.get_ports(printer_name)
+            return port_name in ports
+        except Exception:
+            return False
 
     @staticmethod
     def set_port_value(printer_name, port_name, value, monitor=None):
-        """Altera o valor da porta da impressora."""
+        """Altera o valor de uma porta da impressora."""
+
         try:
+            # Implemente a lógica para alterar a porta aqui
             return f"Alterando porta: Impressora: {printer_name}, Porta: {port_name}, Valor: {value}, Monitor: {monitor}"
         except Exception as e:
-            return f"Erro ao alterar porta: {e}"
+            raise RuntimeError(f"Erro ao alterar porta da impressora {printer_name}: {e}")
 
     @staticmethod
     def create_port(printer_name, port_name, value, monitor=None):
-        """Cria uma nova porta com o valor especificado para a impressora."""
+        """Cria uma nova porta para a impressora."""
+
         try:
+            # Implemente a lógica para criar uma nova porta aqui
             return f"Criando porta: Impressora: {printer_name}, Porta: {port_name}, Valor: {value}, Monitor: {monitor}"
         except Exception as e:
-            return f"Erro ao criar porta: {e}"
+            raise RuntimeError(f"Erro ao criar porta para a impressora {printer_name}: {e}")
 
     @staticmethod
     def delete_port(printer_name, port_name):
-        """Exclui uma porta de uma impressora se existir."""
+        """Exclui uma porta de uma impressora se ela existir."""
+
         try:
+            # Implemente a lógica para excluir a porta aqui
             return f"Excluindo porta: Impressora: {printer_name}, Porta: {port_name}"
         except Exception as e:
-            return f"Erro ao excluir porta: {e}"
+            raise RuntimeError(f"Erro ao excluir porta da impressora {printer_name}: {e}")
