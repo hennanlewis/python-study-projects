@@ -1,4 +1,5 @@
 import win32print
+from icecream import ic
 
 class PrinterManager:
 
@@ -11,12 +12,13 @@ class PrinterManager:
 
         for printer in printers:
             printer_name = printer[2]
+
             try:
-                with win32print.OpenPrinter(printer_name) as handle:
-                    printer_details = win32print.GetPrinter(handle, 1)
-                    printer_info.append(printer_details)
+                handle = win32print.OpenPrinter(printer_name)
+                printer_details = win32print.GetPrinter(handle, 2)
+                printer_info.append(printer_details)
             except Exception as e:
-                raise RuntimeError({'error': f"Erro ao obter detalhes da impressora {printer_name}: {e}"})
+                printer_info.append({'error': f"Erro ao obter detalhes da impressora '{printer_name}': {e}"})
 
         return printer_info
 
@@ -25,10 +27,11 @@ class PrinterManager:
         """Recebe o nome da impressora e retorna o nome das portas associadas a ela."""
 
         try:
-            printer_info = win32print.GetPrinter(printer_name, 2)
+            handle = win32print.OpenPrinter(printer_name)
+            printer_info = win32print.GetPrinter(handle, 2)
             return printer_info.get('pPort', [])
         except Exception as e:
-            raise RuntimeError(f"Erro ao obter portas da impressora {printer_name}: {e}")
+            raise RuntimeError(f"Erro ao obter portas da impressora '{printer_name}': {e}")
 
     @staticmethod
     def check_port_exists(printer_name, port_name):
@@ -38,7 +41,7 @@ class PrinterManager:
             ports = PrinterManager.get_ports(printer_name)
             return port_name in ports
         except Exception as e:
-            raise RuntimeError(f"Erro ao consultar portas da impressora {printer_name}: {e}")
+            raise RuntimeError(f"Erro ao consultar portas da impressora '{printer_name}': {e}")
 
     @staticmethod
     def set_port_value(printer_name, port_name, value, monitor=None):

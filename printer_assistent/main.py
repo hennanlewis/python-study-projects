@@ -7,9 +7,9 @@ if __name__ == "__main__":
     try:
         printers = manager.get_printers_list()
         for printer in printers:
-            ic(printer)
+            ic(printer.get("pPrinterName"))
 
-        printer_name = "Sua Impressora"
+        printer_name = "Nome válido"
         ports = manager.get_ports(printer_name)
         ic(printer_name, ports)
 
