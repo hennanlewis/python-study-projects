@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "printer-helper"
+name = "printer_assistent"
 version = "0.1.0"
 description = ""
 authors = ["Hennan Lewis <39320310+hennanlewis@users.noreply.github.com>"]
