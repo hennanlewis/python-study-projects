@@ -1,71 +1,90 @@
-import win32print
+from typing import List, Dict
 from icecream import ic
+import win32print
+import subprocess
 
 class PrinterManager:
+    """Gerencia impressoras e portas associadas no sistema."""
 
-    @staticmethod
-    def get_printers_list():
-        """Retorna a lista de impressoras atuais do computador com seus respectivos detalhes."""
+    def __init__(self):
+        """Inicializa o gerenciador de impressoras e define atributos relacionados."""
 
-        printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)
+        self._printers_data = self._fetch_printer_list()
+        self.printers_names = [printer["name"] for printer in self._printers_data]
+        self.printer_list = self._printers_data
+
+    def _fetch_printer_list(self) -> List[Dict]:
+        """Obtém a lista de impressoras disponíveis com seus detalhes."""
+
+        printers = win32print.EnumPrinters(
+            win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS
+        )
         printer_info = []
 
         for printer in printers:
             printer_name = printer[2]
 
             try:
-                handle = win32print.OpenPrinter(printer_name)
+                handle = self._open_printer(printer_name)
                 printer_details = win32print.GetPrinter(handle, 2)
-                printer_info.append(printer_details)
+                printer_info.append({ "name": printer_name, "printer_details": printer_details })
             except Exception as e:
-                printer_info.append({'error': f"Erro ao obter detalhes da impressora '{printer_name}': {e}"})
-
+                raise RuntimeError(f"Erro ao acessar a impressora '{printer_name}': {e}")
+        
         return printer_info
 
-    @staticmethod
-    def get_ports(printer_name):
-        """Recebe o nome da impressora e retorna o nome das portas associadas a ela."""
+    def get_printers_ports(self) -> List[Dict]:
+        """Obtém a lista de portas associadas às impressoras disponíveis."""
+
+        if not self.printers_names:
+            return []
+        try:
+            first_printer_name = self.printers_names[2]
+            handle = self._open_printer(first_printer_name)
+            printer = win32print.GetPrinter(handle, 2)
+            return win32print.EnumPorts(printer.get("pPortsName"), 2)
+        except win32print.error as e:
+            raise RuntimeError(f"Erro ao obter portas: {e}")
+
+    def check_port_exists(self, port_name: str) -> bool:
+        """Verifica se uma porta específica existe."""
+
+        return any(port.get("Name") == port_name for port in self.get_printers_ports())
+
+    def create_ip_port(self, port_name: str, port_value: str) -> str:
+        """Cria uma nova porta TCP/IP para a impressora."""
+
+        if self.check_port_exists(port_name):
+            response = f"Porta '{port_name}' já existe."
+            return response
+
+        command = [
+            "powershell",
+            "-Command",
+            f"Add-PrinterPort -Name '{port_name}' -PrinterHostAddress '{port_value}'",
+        ]
 
         try:
-            handle = win32print.OpenPrinter(printer_name)
-            printer_info = win32print.GetPrinter(handle, 2)
-            return printer_info.get('pPort', [])
-        except Exception as e:
-            raise RuntimeError(f"Erro ao obter portas da impressora '{printer_name}': {e}")
+            subprocess.run(command, check=True, capture_output=True, text=True)
+            return f"Nova porta TCP/IP '{port_name}' com IP '{port_value}' criada com sucesso!"
+        except subprocess.CalledProcessError as e:
+            ic(e.stderr)
+            raise RuntimeError(f"Erro ao criar porta '{port_name}': {e.stderr}")
+
+    def delete_port(self, port_name: str) -> str:
+        """Exclui uma porta de impressora."""
+
+        command = ["powershell", "-Command", f"Remove-PrinterPort -Name '{port_name}'"]
+        try:
+            subprocess.run(command, check=True, capture_output=True, text=True)
+            return f"Porta '{port_name}' apagada com sucesso!"
+        except subprocess.CalledProcessError as e:
+            ic(e.stderr)
+            raise RuntimeError(f"Erro ao apagar porta '{port_name}': {e.stderr}")
 
     @staticmethod
-    def check_port_exists(printer_name, port_name):
-        """Verifica se uma porta específica existe para a impressora fornecida."""
+    def _open_printer(printer_name: str):
+        """Helper para abrir uma impressora com suporte a context manager."""
 
-        try:
-            ports = PrinterManager.get_ports(printer_name)
-            return port_name in ports
-        except Exception as e:
-            raise RuntimeError(f"Erro ao consultar portas da impressora '{printer_name}': {e}")
-
-    @staticmethod
-    def set_port_value(printer_name, port_name, value, monitor=None):
-        """Altera o valor de uma porta da impressora."""
-
-        try:
-            return f"Alterando porta: Impressora: {printer_name}, Porta: {port_name}, Valor: {value}, Monitor: {monitor}"
-        except Exception as e:
-            raise RuntimeError(f"Erro ao alterar porta da impressora {printer_name}: {e}")
-
-    @staticmethod
-    def create_port(printer_name, port_name, value, monitor=None):
-        """Cria uma nova porta para a impressora."""
-
-        try:
-            return f"Criando porta: Impressora: {printer_name}, Porta: {port_name}, Valor: {value}, Monitor: {monitor}"
-        except Exception as e:
-            raise RuntimeError(f"Erro ao criar porta para a impressora {printer_name}: {e}")
-
-    @staticmethod
-    def delete_port(printer_name, port_name):
-        """Exclui uma porta de uma impressora se ela existir."""
-
-        try:
-            return f"Excluindo porta: Impressora: {printer_name}, Porta: {port_name}"
-        except Exception as e:
-            raise RuntimeError(f"Erro ao excluir porta da impressora {printer_name}: {e}")
+        handle = win32print.OpenPrinter(printer_name)
+        return handle
