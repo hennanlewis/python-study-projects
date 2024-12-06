@@ -25,72 +25,79 @@ Caso precise de ajuda, veja o passo a passo de como executar os projetos python 
 ```python
 from printer_manager import PrinterManager
 
-# Listar todas as impressoras instaladas
-printers = PrinterManager.get_printer_list()
+# Inicializar o PrinterManager
+printer_manager = PrinterManager()
+
+# Listar os nomes de todas as impressoras instaladas
+printers = printer_manager.printers_names
 print("Lista de Impressoras:", printers)
 
-# Verificar as portas de uma impressora específica
-printer_name = "Nome da Impressora"
-ports = PrinterManager.get_ports(printer_name)
-print(f"Portas da impressora {printer_name}:", ports)
+# Verificar os detalhes de todas as impressoras
+printers_details = printer_manager.printers_details
+print("Detalhes das impressoras:", printers_details)
+
+# Verificar as portas disponíveis no sistema
+printers_ports = printer_manager.printers_ports
+print("Portas disponíveis:", printers_ports)
 
 # Verificar se uma porta específica existe
 port_name = "COM1"
-exists = PrinterManager.check_port_exists(printer_name, port_name)
-print(f"A porta {port_name} existe para a impressora {printer_name}: {exists}")
+exists = printer_manager.check_port_exists(port_name)
+print(f"A porta {port_name} existe: {exists}")
 
-# Criar uma nova porta para uma impressora
-result = PrinterManager.create_port(printer_name, "NovaPorta", "Valor")
-print(result)
+# Criar uma nova porta TCP/IP
+new_port_name = "NovaPorta"
+new_port_ip = "192.168.1.100"
+try:
+    result = printer_manager.create_ip_port(new_port_name, new_port_ip)
+    print(result)
+except RuntimeError as e:
+    print(f"Erro ao criar a porta {new_port_name}: {e}")
 
-# Alterar o valor de uma porta existente
-result = PrinterManager.set_port_value(printer_name, "NovaPorta", "NovoValor")
-print(result)
-
-# Excluir uma porta de uma impressora
-result = PrinterManager.delete_port(printer_name, "NovaPorta")
-print(result)
+# Excluir uma porta
+try:
+    result = printer_manager.delete_port(new_port_name)
+    print(result)
+except RuntimeError as e:
+    print(f"Erro ao excluir a porta {new_port_name}: {e}")
 ```
 
 ### Métodos Disponíveis
 
-`PrinterManager.get_printer_list()`
-- **Descrição**: Retorna a lista de impressoras instaladas no sistema.
+`PrinterManager.printers_names`
+- **Descrição**: Lista apenas os nomes das impressoras instaladas.
 - **Parâmetros**: Nenhum.
-- **Retorno**: Uma lista de dicionários contendo informações detalhadas de cada impressora.
+- **Retorno**: Uma lista de strings contendo os nomes das impressoras.
 
-`PrinterManager.get_ports(printer_name)`
-- **Descrição**: Recupera as portas associadas a uma impressora específica.
-- **Parâmetros**:
-  - `printer_name` (str): Nome da impressora.
-- **Retorno**: Uma lista de portas ou uma mensagem de erro.
+`PrinterManager.printers_details`
+- **Descrição**: Detalhes completos das impressoras instaladas.
+- **Parâmetros**: Nenhum.
+- **Retorno**: Uma lista de dicionários com informações detalhadas de cada impressora.
 
-`PrinterManager.check_port_exists(printer_name, port_name)`
-- **Descrição**: Verifica se uma porta específica existe para a impressora fornecida.
-- **Parâmetros**:
-  - `printer_name` (str): Nome da impressora.
-  - `port_name` (str): Nome da porta a ser verificada.
+`PrinterManager.printers_ports`
+- **Descrição**: Lista as portas associadas às impressoras disponíveis.
+- **Parâmetros**: Nenhum.
+- **Retorno**: Uma lista de dicionários contendo informações das portas.
+
+`PrinterManager.check_port_exists(port_name)`
+- **Descrição**: Verifica se uma porta específica existe no sistema.
+Parâmetros:
+    - `port_name` (str): Nome da porta a ser verificada.
 - **Retorno**: Um valor booleano indicando a existência da porta.
 
-`PrinterManager.set_port_value(printer_name, port_name, value, monitor=None)`
-- **Descrição**: Altera o valor de uma porta específica.
-- **Parâmetros**:
-  - `printer_name` (str): Nome da impressora.
-  - `port_name` (str): Nome da porta.
-  - `value` (str): Novo valor para a porta.
-  - `monitor` (str, opcional): Monitor associado à porta.
+`PrinterManager.create_ip_port(port_name, port_value)`
+- **Descrição**: Cria uma nova porta TCP/IP.
+Parâmetros:
+    - `port_name` (str): Nome da nova porta.
+    - `port_value` (str): Endereço IP associado à porta.
 - **Retorno**: Uma mensagem indicando sucesso ou erro.
 
-`PrinterManager.create_port(printer_name, port_name, value, monitor=None)`
-- **Descrição**: Cria uma nova porta para a impressora especificada.
-- **Parâmetros**: Mesmo que `set_port_value`.
-
-`PrinterManager.delete_port(printer_name, port_name)`
-- **Descrição**: Exclui uma porta de uma impressora, se existente.
-- **Parâmetros**:
-  - `printer_name` (str): Nome da impressora.
-  - `port_name` (str): Nome da porta a ser excluída.
+`PrinterManager.delete_port(port_name)`
+- **Descrição**: Exclui uma porta especificada.
+Parâmetros:
+    - `port_name` (str): Nome da porta a ser excluída.
 - **Retorno**: Uma mensagem indicando sucesso ou erro.
+
 
 ## Considerações
 
