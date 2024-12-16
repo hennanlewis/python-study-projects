@@ -1,4 +1,4 @@
-# Python Projects
+# Python Study Projects
 Repositório que concentra projetos em python
 
 # Requisitos
