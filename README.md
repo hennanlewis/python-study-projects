@@ -1,5 +1,5 @@
 # Python Study Projects
-Repositório que concentra projetos em python
+Repositório que concentra projetos para estudos em python
 
 # Requisitos
 
